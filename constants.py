@@ -1,0 +1,9 @@
+SCREEN_SIZE = (800, 800)
+MIN_SCREEN_SIZE = (400, 400)
+FPS = 60
+TITLE = "Space Invaders"
+
+
+# COLORS
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
