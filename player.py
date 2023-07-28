@@ -11,32 +11,9 @@ class Player(Entity):
         super().__init__(image_path, image_size, position)
         self.speed = 100
         self.direction = pygame.math.Vector2(0, 0)
+        self.missile_cooldown = 0.5
     
     def update(self, dt: float) -> None:
-        self.input()
-        self.move(dt)
-
-    def input(self) -> None:
-        # 斜め移動はサポートしない
-        self.direction.x = 0
-        self.direction.y = 0
-        
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_w]:
-            self.direction.y = -1
-            return
-        elif keys[pygame.K_s]:
-            self.direction.y = 1
-            return
-        
-        if keys[pygame.K_a]:
-            self.direction.x = -1
-            return
-        elif keys[pygame.K_d]:
-            self.direction.x = 1
-            return
-    
-    def move(self, dt: float) -> None:
         if self.direction.magnitude() > 0:
             self.direction = self.direction.normalize()
 
@@ -45,3 +22,8 @@ class Player(Entity):
         
         self.rect.centerx = math.floor(self.x)
         self.rect.centery = math.floor(self.y)
+
+        self.missile_cooldown -= dt
+
+    def can_shoot(self) -> bool:
+        return self.missile_cooldown <= 0
