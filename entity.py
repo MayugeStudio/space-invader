@@ -19,3 +19,26 @@ class Entity:
 
     def collide_with(self, other: "Entity") -> bool:
         return self.mask.overlap(other.mask, (other.rect.x - self.rect.x, other.rect.y - self.rect.y)) is not None
+
+
+class EntityContainer:
+    def __init__(self) -> None:
+        self._enities: list[Entity] = []
+    
+    def add(self, entity: Entity) -> None:
+        self._enities.append(entity)
+    
+    def remove(self, entity: Entity) -> None:
+        self._enities.remove(entity)
+    
+    def draw(self, surface: pygame.Surface) -> None:
+        for entity in self._enities:
+            entity.draw(surface)
+    
+    def update(self, dt: float) -> None:
+        for entity in self._enities:
+            entity.update(dt)
+    
+    def collide_with(self, other: Entity) -> list[Entity]:
+        return [entity for entity in self._enities if entity.collide_with(other)]
+    
