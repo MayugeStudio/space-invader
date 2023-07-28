@@ -1,11 +1,14 @@
 import pygame
 
+from utils import load_image, scale_image_by_size
+
 
 class Entity:
-    def __init__(self, image: pygame.Surface, position: tuple[int, int]) -> None:
-        self.image = image
+    def __init__(self, image_path: str, image_size: tuple[int, int], position: tuple[int, int]) -> None:
+        self.image = scale_image_by_size(load_image(image_path), image_size)
+        self.image_size = image_size
         self.mask = pygame.mask.from_surface(self.image)
-        self.rect = self.image.get_rect(center=position)
+        self.rect = self.image.get_frect(center=position)
         self.x, self.y = position
     
     def draw(self, surface: pygame.Surface) -> None:
