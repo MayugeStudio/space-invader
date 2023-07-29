@@ -4,7 +4,6 @@ import pygame
 
 from constants import *
 from player import PlayerShip
-from entity import EntityContainer
 from missile import Missile, MissilePrototype
 from enemy import Enemy, EnemyPrototype
 from background import AnimatedBackground, MovedBackground, FixedBackground
@@ -12,6 +11,7 @@ from background import AnimatedBackground, MovedBackground, FixedBackground
 def main():
     pygame.init()
     screen = pygame.display.set_mode(SCREEN_SIZE)
+    screen_size = SCREEN_SIZE
     pygame.display.set_caption(TITLE)
 
     clock = pygame.time.Clock()
@@ -29,9 +29,8 @@ def main():
     
     basic_enemy = EnemyPrototype("assets/image/enemy/basic_alien_1.png", (64, 64), 100)
     
-    missile_container = EntityContainer()
-    enemy_container = EntityContainer()
-    
+    missile_container: list[Missile] = []
+    enemy_container: list[Enemy] = []
     
     
     running = True
@@ -48,7 +47,7 @@ def main():
         if enemy_spawn_timer >= next_enemy:
             enemy_spawn_timer = 0
             e_pos = (random.randint(200, SCREEN_SIZE[0] - 200), (random.randint(-100, -50)))
-            enemy_container.add(Enemy(basic_enemy, e_pos, screen.get_size()))
+            enemy_container.append(Enemy(basic_enemy, e_pos, screen.get_size()))
 
         screen.fill(LIGHT_GRAY)
         
@@ -73,24 +72,33 @@ def main():
             player_ship.direction.x = 1
         
         if keys[pygame.K_SPACE] and player_ship.can_shoot():
-            missile_container.add(
-                Missile(player_missile_1, (player_ship.rect.centerx, player_ship.rect.centery - 5), "player", screen.get_size())
-            )
+            missile = Missile(player_missile_1, (player_ship.rect.centerx, player_ship.rect.centery - 5), "player", screen.get_size())
+            missile_container.append(missile)
             player_ship.missile_cooldown = 0.5
         
-        player_ship.update(dt)
-        enemy_container.update(dt)
-        missile_container.update(dt)
         
-        for missile in missile_container.get_all():
-            for enemy in enemy_container.get_all():
+        for enemy in enemy_container:
+            enemy.update(dt)
+            enemy.draw(screen)
+            if enemy.rect.top > screen_size[1]:
+                enemy_container.remove(enemy)
+                continue
+        
+        for missile in missile_container[:]:
+            missile.update(dt)
+            if missile.rect.bottom < 0 or missile.rect.top > screen_size[1]:
+                missile_container.remove(missile)
+                continue
+            missile.draw(screen)
+        
+        for missile in missile_container[:]:
+            for enemy in enemy_container[:]:
                 if missile.collide_with(enemy):
-                    missile.kill()
-                    enemy.kill()
+                    missile_container.remove(missile)
+                    enemy_container.remove(enemy)
 
-        missile_container.draw(screen)
+        player_ship.update(dt)
         player_ship.draw(screen)
-        enemy_container.draw(screen)
 
         pygame.display.update()
 

@@ -16,9 +16,6 @@ class Enemy(Entity):
         
     def update(self, dt: float) -> None:
         self.rect.y += dt * self.speed * self.direction
-
-        if self.rect.bottom > self.screen_size[1]:
-            self.kill()
         
 
 @dataclass
