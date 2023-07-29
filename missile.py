@@ -26,8 +26,6 @@ class Missile(Entity):
     
     def update(self, dt: float) -> None:
         self.rect.y += self.direction.y * self.speed * dt
-        if self.rect.bottom < 0 or self.rect.top > self.screen_size[1]:
-            self.kill()
 
 
 @dataclass
