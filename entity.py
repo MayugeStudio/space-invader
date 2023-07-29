@@ -55,6 +55,9 @@ class EntityContainer:
         for entity in self._enities:
             entity.update(dt)
     
+    def get_all(self) -> list[Entity]:
+        return self._enities
+    
     def collide_with(self, other: Entity) -> list[Entity]:
         return [entity for entity in self._enities if entity.collide_with(other)]
     
