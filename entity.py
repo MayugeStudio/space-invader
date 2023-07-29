@@ -16,7 +16,7 @@ class Entity:
         self.x, self.y = position
         self.parent: EntityContainer | None = None
     
-    def set_parent(self, parent: EntityContainer) -> None:
+    def set_parent(self, parent: EntityContainer | None) -> None:
         self.parent = parent
     
     def draw(self, surface: pygame.Surface) -> None:
@@ -39,25 +39,23 @@ class Entity:
 
 class EntityContainer:
     def __init__(self) -> None:
-        self._enities: list[Entity] = []
+        self._entities: list[Entity] = []
     
     def add(self, entity: Entity) -> None:
-        self._enities.append(entity)
+        entity.set_parent(self)
+        self._entities.append(entity)
     
     def remove(self, entity: Entity) -> None:
-        self._enities.remove(entity)
+        self._entities.remove(entity)
+        entity.set_parent(None)
     
     def draw(self, surface: pygame.Surface) -> None:
-        for entity in self._enities:
+        for entity in self._entities:
             entity.draw(surface)
     
     def update(self, dt: float) -> None:
-        for entity in self._enities:
+        for entity in self._entities:
             entity.update(dt)
     
     def get_all(self) -> list[Entity]:
-        return self._enities
-    
-    def collide_with(self, other: Entity) -> list[Entity]:
-        return [entity for entity in self._enities if entity.collide_with(other)]
-    
+        return self._entities
