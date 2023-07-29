@@ -22,6 +22,7 @@ def main():
     
     enemy_spawn_timer = 0
     next_enemy = 4
+    appeared_enemy_number = 0
     
     # Game setup
     background = AnimatedBackground("assets/image/background/background_1_{INDEX}.png", screen.get_size())
@@ -105,7 +106,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            
         
         dt = clock.tick(FPS) / 1000
         
@@ -184,6 +184,11 @@ def main():
                 e_pos = (random.randint(200, SCREEN_SIZE[0] - 200), (random.randint(-100, -50)))
                 e_prototype = random.choice(enemy_prototypes)
                 enemy_container.append(Enemy(e_prototype, e_pos, screen.get_size()))
+                appeared_enemy_number += 1
+                if appeared_enemy_number >= 5:
+                    appeared_enemy_number = 0
+                    if next_enemy > 0.3:
+                        next_enemy -= 0.3
 
             screen.fill(LIGHT_GRAY)
             
