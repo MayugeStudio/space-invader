@@ -33,7 +33,11 @@ def main():
     player_life = 1
     
     player_missile_1 = MissilePrototype("assets/image/missile/player_missile_1.png", (12, 16), 300)
-    basic_enemy = EnemyPrototype("assets/image/enemy/basic_alien_1.png", (64, 64), 100)
+    basic_enemy_1 = EnemyPrototype("assets/image/enemy/basic_alien_1.png", (64, 64), 100)
+    basic_enemy_2 = EnemyPrototype("assets/image/enemy/basic_alien_2.png", (64, 64), 150)
+    basic_enemy_3 = EnemyPrototype("assets/image/enemy/basic_alien_3.png", (64, 64), 120)
+    
+    enemy_prototypes = [basic_enemy_1, basic_enemy_2, basic_enemy_3]
     
     missile_container: list[Missile] = []
     enemy_container: list[Enemy] = []
@@ -178,7 +182,8 @@ def main():
             if enemy_spawn_timer >= next_enemy:
                 enemy_spawn_timer = 0
                 e_pos = (random.randint(200, SCREEN_SIZE[0] - 200), (random.randint(-100, -50)))
-                enemy_container.append(Enemy(basic_enemy, e_pos, screen.get_size()))
+                e_prototype = random.choice(enemy_prototypes)
+                enemy_container.append(Enemy(e_prototype, e_pos, screen.get_size()))
 
             screen.fill(LIGHT_GRAY)
             
