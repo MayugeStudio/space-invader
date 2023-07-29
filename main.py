@@ -1,9 +1,12 @@
+import random
+
 import pygame
 
 from constants import *
 from player import Player
-from missile import Missile, MissilePrototype
 from entity import EntityContainer
+from missile import Missile, MissilePrototype
+from enemy import Enemy, EnemyPrototype
 from background import AnimatedBackground, MovedBackground, FixedBackground
 
 def main():
@@ -13,6 +16,9 @@ def main():
 
     clock = pygame.time.Clock()
     
+    enemy_spawn_timer = 0
+    next_enemy = 4
+    
     # Game setup
     background = AnimatedBackground("assets/image/background/background_1_{INDEX}.png", screen.get_size())
     star_background = MovedBackground("assets/image/background/background_2.png", screen.get_size())
@@ -21,7 +27,12 @@ def main():
     
     player_missile_1 = MissilePrototype("assets/image/missile/player_missile_1.png", (12, 16), 300)
     
+    basic_enemy = EnemyPrototype("assets/image/enemy/basic_alien_1.png", (64, 64), 100)
+    
     missile_container = EntityContainer()
+    enemy_container = EntityContainer()
+    
+    
     
     running = True
 
@@ -29,8 +40,15 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            
         
         dt = clock.tick(FPS) / 1000
+        enemy_spawn_timer += dt
+        
+        if enemy_spawn_timer >= next_enemy:
+            enemy_spawn_timer = 0
+            e_pos = (random.randint(200, SCREEN_SIZE[0] - 200), (random.randint(-100, -50)))
+            enemy_container.add(Enemy(basic_enemy, e_pos, screen.get_size()))
 
         screen.fill(LIGHT_GRAY)
         
@@ -61,10 +79,12 @@ def main():
             player.missile_cooldown = 0.5
         
         player.update(dt)
+        enemy_container.update(dt)
         missile_container.update(dt)
 
         missile_container.draw(screen)
         player.draw(screen)
+        enemy_container.draw(screen)
 
         pygame.display.update()
 
