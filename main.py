@@ -23,8 +23,12 @@ def main():
     enemy_spawn_timer = 0
     next_enemy = 4
     appeared_enemy_number = 0
+    current_difficulty = 1
     
     # Game setup
+    
+    font = pygame.Font("assets/fonts/PixelMplus12-Regular.ttf", size=36)
+    
     background = AnimatedBackground("assets/image/background/background_1_{INDEX}.png", screen.get_size())
     star_background = MovedBackground("assets/image/background/background_2.png", screen.get_size())
     fixed_background = FixedBackground("assets/image/background/background_3.png", screen.get_size())
@@ -47,6 +51,12 @@ def main():
     GAME_SCENE = "GAME"
     MOVE_TO_GAME_OVER_SCENE = "MOVE_GAME_OVER"
     GAME_OVER_SCENE = "GAME_OVER"
+    
+    increase_difficulty_text_surface = font.render("難易度が上昇した", False, WHITE)
+    increase_difficulty_text_rect = increase_difficulty_text_surface.get_rect()
+    show_increase_difficulty_text = False
+    show_increase_difficulty_counter = 0
+    show_increase_difficulty_hidden_count = 2
     
     game_over_text = scale_image_by_size(load_image("assets/image/ui/game_over.png"), (56 * 8, 8 * 8))
     game_over_text_rect = game_over_text.get_rect()
@@ -98,7 +108,7 @@ def main():
     overlap_surface.fill((0, 0, 0))
     overlap_surface.set_alpha(alpha)
     
-    current_scene = GAME_OVER_SCENE
+    current_scene = MENU_SCENE
     
     running = True
 
@@ -189,7 +199,9 @@ def main():
                     appeared_enemy_number = 0
                     if next_enemy > 0.3:
                         next_enemy -= 0.3
-
+                        current_difficulty += 1
+                        show_increase_difficulty_text = True
+                        
             screen.fill(LIGHT_GRAY)
             
             fixed_background.draw(screen)
@@ -244,6 +256,21 @@ def main():
             
             player_ship.update(dt)
             player_ship.draw(screen)
+            
+            if show_increase_difficulty_text:
+                current_difficulty_surface = font.render(f"現在の難易度 {current_difficulty}", False, WHITE)
+                current_difficulty_rect = current_difficulty_surface.get_rect()
+                
+                increase_difficulty_text_rect.center = screen_rect.center
+                current_difficulty_rect.centerx = screen_rect.centerx
+                current_difficulty_rect.centery = increase_difficulty_text_rect.centery + 100
+                screen.blit(increase_difficulty_text_surface, increase_difficulty_text_rect)
+                screen.blit(current_difficulty_surface, current_difficulty_rect)
+                show_increase_difficulty_counter += dt
+                if show_increase_difficulty_counter > show_increase_difficulty_hidden_count:
+                    show_increase_difficulty_counter = 0
+                    show_increase_difficulty_text = False
+            
             for i in range(player_life):
                 screen.blit(player_life_image, (i * (player_life_image.get_width() + 5) + 5, 16))
 
