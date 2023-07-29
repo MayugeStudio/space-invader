@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pygame
 
-from utils import load_image, scale_image_by_size
+from utils import load_image, scale_image_by_size, create_outline
 
 
 class Entity:
@@ -11,6 +11,7 @@ class Entity:
         else:
             self.image = scale_image_by_size(load_image(image_path), image_size)
         self.image_size = image_size
+        self.image = create_outline(self.image)
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_frect(center=position)
         self.x, self.y = position
