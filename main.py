@@ -88,6 +88,7 @@ def main():
             enemy.draw(screen)
             if enemy.rect.top > screen_size[1]:
                 enemy_container.remove(enemy)
+                player_life -= 1
                 continue
         
         for missile in missile_container[:]:
