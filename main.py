@@ -49,11 +49,8 @@ def main():
     place_space_to_continue_text = scale_image_by_size(load_image("assets/image/ui/place_space_to_continue.png"), (161 * 4, 7 * 5))
     place_space_to_continue_text_rect = place_space_to_continue_text.get_rect()
     
-    space_texts = [scale_image_by_size(load_image(f"assets/image/ui/space_{n}.png"), (49 * 4, 7 * 4)) for n in range(1, 6 + 1)]
-    space_text_rect = space_texts[0].get_rect()
-    space_text_index = 0
-    space_text_counter = 0
-    space_text_change = 0.08
+    space_text_image = scale_image_by_size(load_image(f"assets/image/ui/space.png"), (49 * 4, 7 * 4))
+    space_text_rect = space_text_image.get_rect()
     
     menu_scene_bg_list = [scale_image_by_size(load_image(f"assets/image/ui/menu_scene_bg_{n}.png"), screen_size) for n in range(1, 12 + 1)]
     menu_scene_index = 0
@@ -168,8 +165,14 @@ def main():
 
             if keys[pygame.K_SPACE] and cursor_move_counter >= cursor_move_interval:
                 cursor_move_counter = 0
-                current_scene = GAME_SCENE
-        
+                if cursor_row == 0:
+                    current_scene = GAME_SCENE
+                elif cursor_row == 1:
+                    # TODO: MOVE TO OPTION MENU
+                    pass
+                elif cursor_row == 2:
+                    running = False
+                
         elif current_scene == GAME_SCENE:
             enemy_spawn_timer += dt
             if enemy_spawn_timer >= next_enemy:
@@ -264,15 +267,21 @@ def main():
             space_text_rect.centerx = screen_rect.centerx
             space_text_rect.centery = screen_rect.centery + 200
             
+            cursor_image_rect.centerx = screen_rect.centerx - space_text_rect.width // 2 - 50
+            reversed_cursor_image_rect.centerx = screen_rect.centerx + space_text_rect.width // 2 + 50
+            cursor_image_rect.centery = reversed_cursor_image_rect.centery = space_text_rect.centery
+
             screen.blit(game_over_text, game_over_text_rect)
             screen.blit(place_space_to_continue_text, place_space_to_continue_text_rect)
-            screen.blit(space_texts[space_text_index], space_text_rect)
+            screen.blit(space_text_image, space_text_rect)
+            screen.blit(cursor_images[cursor_animation_index], cursor_image_rect)
+            screen.blit(reversed_cursor_images[cursor_animation_index], reversed_cursor_image_rect)
             
-            space_text_counter += dt
-            if space_text_counter >= space_text_change:
-                space_text_index += 1
-                space_text_index %= len(space_texts)
-                space_text_counter = 0
+            cursor_animation_counter += dt
+            if cursor_animation_counter >= cursor_animation_change:
+                cursor_animation_index += 1
+                cursor_animation_index %= len(cursor_images)
+                cursor_animation_counter = 0
             
             if pygame.key.get_pressed()[pygame.K_SPACE]:
                 current_scene = MENU_SCENE
