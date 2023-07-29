@@ -6,7 +6,7 @@ from entity import Entity
 from constants import *
 
 
-class Player(Entity):
+class PlayerShip(Entity):
     def __init__(self, image_path: str, image_size: tuple[int, int], position: tuple[int, int]) -> None:
         super().__init__(image_path, image_size, position)
         self.speed = 200
