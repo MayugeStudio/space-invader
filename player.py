@@ -9,7 +9,7 @@ from constants import *
 class Player(Entity):
     def __init__(self, image_path: str, image_size: tuple[int, int], position: tuple[int, int]) -> None:
         super().__init__(image_path, image_size, position)
-        self.speed = 100
+        self.speed = 200
         self.direction = pygame.math.Vector2(0, 0)
         self.missile_cooldown = 0.5
     

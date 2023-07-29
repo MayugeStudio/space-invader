@@ -81,6 +81,12 @@ def main():
         player.update(dt)
         enemy_container.update(dt)
         missile_container.update(dt)
+        
+        for missile in missile_container.get_all():
+            for enemy in enemy_container.get_all():
+                if missile.collide_with(enemy):
+                    missile.kill()
+                    enemy.kill()
 
         missile_container.draw(screen)
         player.draw(screen)
