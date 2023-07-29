@@ -104,6 +104,10 @@ def main():
                     missile_container.remove(missile)
                     enemy_container.remove(enemy)
 
+        if player_life <= 0:
+            print("PLAYER WAS DEAD!")
+            break
+        
         player_ship.update(dt)
         player_ship.draw(screen)
         for i in range(player_life):
