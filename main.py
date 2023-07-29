@@ -8,6 +8,9 @@ from missile import Missile, MissilePrototype
 from enemy import Enemy, EnemyPrototype
 from background import AnimatedBackground, MovedBackground, FixedBackground
 
+from utils import load_image, scale_image_by_size
+
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode(SCREEN_SIZE)
@@ -24,6 +27,9 @@ def main():
     star_background = MovedBackground("assets/image/background/background_2.png", screen.get_size())
     fixed_background = FixedBackground("assets/image/background/background_3.png", screen.get_size())
     player_ship = PlayerShip("assets/image/player/player.png", (64, 64), (SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] - 50))
+    
+    player_life_image = scale_image_by_size(load_image("assets/image/player/life.png"), (64, 64))
+    player_life = 3
     
     player_missile_1 = MissilePrototype("assets/image/missile/player_missile_1.png", (12, 16), 300)
     
@@ -99,6 +105,8 @@ def main():
 
         player_ship.update(dt)
         player_ship.draw(screen)
+        for i in range(player_life):
+            screen.blit(player_life_image, (i * (player_life_image.get_width() + 5) + 5, 16))
 
         pygame.display.update()
 
