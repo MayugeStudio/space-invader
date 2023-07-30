@@ -13,10 +13,13 @@ class Enemy(Entity):
         self.speed = prototype.speed
         self.direction = 1
         self.screen_size = screen_size
+        self.is_dead = False
         
     def update(self, dt: float) -> None:
         self.rect.y += dt * self.speed * self.direction
-        
+    
+    def mark_as_dead(self) -> None:
+        self.is_dead = True        
 
 @dataclass
 class EnemyPrototype:
