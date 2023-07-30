@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import pygame
 
 from dataclasses import dataclass
@@ -45,6 +47,21 @@ class HomingMissile(Missile):
         self.rect.y += self.direction.y * self.speed * dt
 
 
+class DiagonalMissile(Missile):
+    def __init__(self, prototype: MissilePrototype, position: tuple[float, float], team: str, angle: int) -> None:
+        super().__init__(prototype, position, team)
+        self.angle = math.radians(angle)
+        self.direction.x = math.cos(self.angle)
+        self.direction.y = math.sin(self.angle)
+        self.direction = self.direction.normalize()
+        self.image = pygame.transform.rotate(self.image, -angle + 90)
+        print(angle + 90)
+    
+    def update(self, dt: float) -> None:
+        self.rect.x += self.direction.x * self.speed * dt
+        self.rect.y += self.direction.y * self.speed * dt
+        
+        
 @dataclass
 class MissilePrototype:
     image_path: str

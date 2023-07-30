@@ -4,7 +4,7 @@ import pygame
 
 from constants import *
 from player import PlayerShip
-from missile import Missile, HomingMissile ,MissilePrototype
+from missile import Missile, HomingMissile, DiagonalMissile, MissilePrototype
 from enemy import Enemy, EnemyPrototype
 from background import AnimatedBackground, MovedBackground, FixedBackground
 
@@ -258,6 +258,13 @@ def main():
                 missile_container.append(missile)
                 player_ship.missile_cooldown = 0.5
             
+            if keys[pygame.K_x] and player_ship.can_shoot():
+                for i in range(5):
+                    m = DiagonalMissile(
+                        player_missile_1, (player_ship.rect.centerx, player_ship.rect.centery - 5), "player", i * 30 + -150
+                    )
+                    missile_container.append(m)
+                player_ship.missile_cooldown = 0.5
             
             for enemy in enemy_container:
                 enemy.update(dt)
