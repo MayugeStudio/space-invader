@@ -43,7 +43,7 @@ def main():
     player_ship = PlayerShip("assets/image/player/player.png", (64, 64), (SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] - 50))
     
     player_life_image = scale_image_by_size(load_image("assets/image/player/life.png"), (64, 64))
-    player_life = 1
+    player_life = 3
     
     player_missile_1 = MissilePrototype("assets/image/missile/player_missile_1.png", (12, 16), 300)
     player_missile_2 = MissilePrototype("assets/image/missile/player_missile_1.png", (12, 16), 300)
@@ -66,6 +66,7 @@ def main():
     show_increase_difficulty_text = False
     show_increase_difficulty_counter = 0
     show_increase_difficulty_hidden_count = 2
+    increase_difficulty_enemy_number = 5
     
     game_over_text = scale_image_by_size(load_image("assets/image/ui/game_over.png"), (56 * 8, 8 * 8))
     game_over_text_rect = game_over_text.get_rect()
@@ -207,11 +208,13 @@ def main():
                 e_prototype = random.choice(enemy_prototypes)
                 enemy_container.append(Enemy(e_prototype, e_pos, screen.get_size()))
                 appeared_enemy_number += 1
-                if appeared_enemy_number >= 5:
+                if appeared_enemy_number >= increase_difficulty_enemy_number:
                     appeared_enemy_number = 0
                     if next_enemy > 0.3:
                         next_enemy -= 0.3
                         current_difficulty += 1
+                        increase_difficulty_enemy_number *= 1.2
+                        increase_difficulty_enemy_number = int(increase_difficulty_enemy_number)
                         show_increase_difficulty_text = True
                         
             screen.fill(LIGHT_GRAY)
