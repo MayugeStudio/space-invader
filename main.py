@@ -4,7 +4,7 @@ import pygame
 
 from constants import *
 from player import PlayerShip
-from missile import Missile, MissilePrototype
+from missile import Missile, HomingMissile ,MissilePrototype
 from enemy import Enemy, EnemyPrototype
 from background import AnimatedBackground, MovedBackground, FixedBackground
 
@@ -38,6 +38,7 @@ def main():
     player_life = 1
     
     player_missile_1 = MissilePrototype("assets/image/missile/player_missile_1.png", (12, 16), 300)
+    player_missile_2 = MissilePrototype("assets/image/missile/player_missile_1.png", (12, 16), 300)
     basic_enemy_1 = EnemyPrototype("assets/image/enemy/basic_alien_1.png", (64, 64), 100)
     basic_enemy_2 = EnemyPrototype("assets/image/enemy/basic_alien_2.png", (64, 64), 150)
     basic_enemy_3 = EnemyPrototype("assets/image/enemy/basic_alien_3.png", (64, 64), 120)
@@ -225,7 +226,35 @@ def main():
                 player_ship.direction.x = 1
             
             if keys[pygame.K_SPACE] and player_ship.can_shoot():
-                missile = Missile(player_missile_1, (player_ship.rect.centerx, player_ship.rect.centery - 5), "player", screen.get_size())
+                missile = Missile(player_missile_1, (player_ship.rect.centerx, player_ship.rect.centery - 5), "player")
+                missile_container.append(missile)
+                player_ship.missile_cooldown = 0.5
+            
+            if keys[pygame.K_z] and player_ship.can_shoot():
+                # 一番近い敵を求める
+                distance: float | None = None
+                target = None
+                for enemy in enemy_container:
+                    d = (enemy.rect.x - player_ship.rect.x) ** 2 + (enemy.rect.y - player_ship.rect.y) ** 2
+                    if distance is None:
+                        distance = d
+                        target = enemy
+                        continue
+                    if d < distance:
+                        distance = d
+                        target = enemy
+                
+                if target is None:
+                    missile = Missile(
+                        player_missile_1,
+                        (player_ship.rect.centerx, player_ship.rect.centery - 5),
+                        "player")
+                else:
+                    missile = HomingMissile(
+                        player_missile_2,
+                        (player_ship.rect.centerx, player_ship.rect.centery - 5),
+                        "player", 
+                        target)
                 missile_container.append(missile)
                 player_ship.missile_cooldown = 0.5
             
@@ -235,6 +264,7 @@ def main():
                 enemy.draw(screen)
                 if enemy.rect.top > screen_size[1]:
                     enemy_container.remove(enemy)
+                    enemy.mark_as_dead()
                     player_life -= 1
                     continue
             
@@ -250,6 +280,7 @@ def main():
                     if missile.collide_with(enemy):
                         missile_container.remove(missile)
                         enemy_container.remove(enemy)
+                        enemy.mark_as_dead()
 
             if player_life <= 0:
                 current_scene = MOVE_TO_GAME_OVER_SCENE

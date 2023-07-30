@@ -3,6 +3,7 @@ from __future__ import annotations
 import pygame
 
 from dataclasses import dataclass
+from enemy import Enemy
 
 from entity import Entity
 
@@ -15,16 +16,32 @@ class Missile(Entity):
         prototype: MissilePrototype,
         position: tuple[float, float],
         team: str,
-        screen_size: tuple[int, int]
         ) -> None:
         position = int(position[0]), int(position[1])
         super().__init__("", prototype.image_size, position, image=prototype.image)
         self.team = team
         self.direction = pygame.Vector2(0, -1) if team == "player" else pygame.Vector2(0, 1)
         self.speed = prototype.speed
-        self.screen_size = screen_size
     
     def update(self, dt: float) -> None:
+        self.rect.y += self.direction.y * self.speed * dt
+
+
+class HomingMissile(Missile):
+    def __init__(self, prototype: MissilePrototype, position: tuple[float, float], team: str, target: Enemy) -> None:
+        super().__init__(prototype, position, team)
+        self.target = target
+    
+    def update(self, dt: float) -> None:
+        if self.target.is_dead:
+            return super().update(dt)
+
+        self.direction.x = self.target.x - self.rect.x
+        self.direction.y = self.target.y - self.rect.y
+        if self.direction.magnitude() > 0:
+            self.direction = self.direction.normalize()
+        
+        self.rect.x += self.direction.x * self.speed * dt
         self.rect.y += self.direction.y * self.speed * dt
 
 
