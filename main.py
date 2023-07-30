@@ -4,11 +4,61 @@ import pygame
 
 from constants import *
 from player import PlayerShip
-from missile import Missile, HomingMissile, DiagonalMissile, MissilePrototype
+from missile import Missile, MissilePrototype, MissileFactory, HomingMissileFactory, WayMissileFactory
 from enemy import Enemy, EnemyPrototype
 from background import AnimatedBackground, MovedBackground, FixedBackground
 
 from utils import load_image, scale_image_by_size
+
+
+class Cursor:
+    def __init__(self, interval: float, max_index: int) -> None:
+        self.counter = 0
+        self.interval = interval
+        self.index = 0
+        self.max_index = max_index
+    
+    def add_counter(self, dt: float) -> None:
+        self.counter += dt
+    
+    def add_index(self) -> None:
+        self.index += 1
+        self.index %= self.max_index
+    
+    def sub_index(self) -> None:
+        self.index -= 1
+        self.index %= self.max_index
+
+    def is_active(self) -> bool:
+        return self.counter >= self.interval
+
+    def reset_counter(self) -> None:
+        self.counter = 0
+
+
+class AnimationCounter:
+    def __init__(self, change: float, max_index: int) -> None:
+        self.change = change
+        self.counter = 0
+        self.index = 0
+        self.max_index = max_index
+    
+    def add_counter(self, dt: float) -> None:
+        self.counter += dt
+    
+    def add_index(self) -> None:
+        self.index += 1
+        self.index %= self.max_index
+    
+    def sub_index(self) -> None:
+        self.index -= 1
+        self.index %= self.max_index
+    
+    def is_change(self) -> bool:
+        return self.counter >= self.change
+
+    def reset_counter(self) -> None:
+        self.counter = 0
 
 
 def main():
@@ -34,7 +84,8 @@ def main():
         "hit": pygame.mixer.Sound("assets/sound/hit.wav"),
         "select": pygame.mixer.Sound("assets/sound/select.wav")
     }
-    sound_map["select"].set_volume(0.4)
+    sound_map["shoot"].set_volume(0.1)
+    sound_map["select"].set_volume(0.1)
     
     
     background = AnimatedBackground("assets/image/background/background_1_{INDEX}.png", screen.get_size())
@@ -55,6 +106,13 @@ def main():
     
     missile_container: list[Missile] = []
     enemy_container: list[Enemy] = []
+    
+    normal_missile_factory = MissileFactory(player_missile_1, player_ship, "普通のミサイル")
+    homing_missile_factory = HomingMissileFactory(player_missile_2, player_ship, enemy_container, "ホーミング")
+    five_way_missile_factory = WayMissileFactory(player_missile_1, player_ship, 5, "5wayミサイル")
+    
+    missile_factory_list = [normal_missile_factory, homing_missile_factory, five_way_missile_factory]
+    missile_factory_cursor = Cursor(0.2, len(missile_factory_list))
     
     MENU_SCENE = "MENU"
     GAME_SCENE = "GAME"
@@ -78,15 +136,11 @@ def main():
     space_text_rect = space_text_image.get_rect()
     
     menu_scene_bg_list = [scale_image_by_size(load_image(f"assets/image/ui/menu_scene_bg_{n}.png"), screen_size) for n in range(1, 12 + 1)]
-    menu_scene_index = 0
-    menu_scene_counter = 0
-    menu_scene_change = 0.13
+    menu_scene_counter = AnimationCounter(0.13, len(menu_scene_bg_list))
     
     menu_scene_alien_bg_list = [scale_image_by_size(load_image(f"assets/image/ui/menu_scene_alien_bg_{n}.png"), screen_size) for n in range(1, 12 + 1)]
-    menu_scene_alien_index = 0
-    menu_scene_alien_counter = 0
-    menu_scene_alien_change = 0.08
-    
+    menu_scene_alien_counter = AnimationCounter(0.08, len(menu_scene_alien_bg_list))
+
     start_game_text = scale_image_by_size(load_image(f"assets/image/ui/start_game.png"), (70 * 4, 9 * 4))
     start_game_text_rect = start_game_text.get_rect()
     option_text_image = scale_image_by_size(load_image("assets/image/ui/option.png"), (7 * 6 * 4, 9 * 4))
@@ -96,7 +150,7 @@ def main():
     
     selection_rect_list = [start_game_text_rect, option_text_rect, quit_text_rect]
     
-    selected_rect = start_game_text_rect
+    cursor_move_counter = Cursor(0.2, len(selection_rect_list))
     
     cursor_images = [scale_image_by_size(load_image(f"assets/image/ui/cursor_{n}.png"), (8 * 4, 9 * 4)) for n in range(1, 6 + 1)]
     reversed_cursor_images = [pygame.transform.flip(surf, True, False) for surf in cursor_images]
@@ -104,14 +158,7 @@ def main():
     cursor_image_rect = cursor_images[0].get_rect()
     reversed_cursor_image_rect = reversed_cursor_images[0].get_rect()
     
-    cursor_animation_index = 0
-    cursor_animation_counter = 0
-    cursor_animation_change = 0.09
-    
-    cursor_move_counter = 0
-    cursor_move_interval = 0.2
-    cursor_row = 0
-    cursor_max_row = len(selection_rect_list)
+    cursor_animation_counter = AnimationCounter(0.09, len(cursor_images))
     
     overlap_surface = pygame.Surface(screen_size)
     alpha = 0
@@ -131,8 +178,8 @@ def main():
         
         if current_scene == MENU_SCENE:
             screen.fill(LIGHT_GRAY)
-            screen.blit(menu_scene_bg_list[menu_scene_index], (0, 0))
-            screen.blit(menu_scene_alien_bg_list[menu_scene_alien_index], (0, 0))
+            screen.blit(menu_scene_bg_list[menu_scene_counter.index], (0, 0))
+            screen.blit(menu_scene_alien_bg_list[menu_scene_alien_counter.index], (0, 0))
 
             start_game_text_rect.centerx = screen_rect.centerx
             start_game_text_rect.centery = screen_rect.centery + 220
@@ -145,59 +192,51 @@ def main():
             screen.blit(option_text_image, option_text_rect)
             screen.blit(quit_text_image, quit_text_rect)
             
-            cursor_image_rect.centerx = screen_rect.centerx - selected_rect.width//2 - 50
-            reversed_cursor_image_rect.centerx = screen_rect.centerx + selected_rect.width//2 + 50
-            cursor_image_rect.centery = reversed_cursor_image_rect.centery = selected_rect.centery
+            cursor_image_rect.centerx = screen_rect.centerx - selection_rect_list[cursor_move_counter.index].width//2 - 50
+            reversed_cursor_image_rect.centerx = screen_rect.centerx + selection_rect_list[cursor_move_counter.index].width//2 + 50
+            cursor_image_rect.centery = reversed_cursor_image_rect.centery = selection_rect_list[cursor_move_counter.index].centery
             
-            screen.blit(cursor_images[cursor_animation_index], cursor_image_rect)
-            screen.blit(reversed_cursor_images[cursor_animation_index], reversed_cursor_image_rect)
+            screen.blit(cursor_images[cursor_animation_counter.index], cursor_image_rect)
+            screen.blit(reversed_cursor_images[cursor_animation_counter.index], reversed_cursor_image_rect)
             
             
-            menu_scene_counter += dt
-            if menu_scene_counter >= menu_scene_change:
-                menu_scene_index += 1
-                menu_scene_index %= len(menu_scene_bg_list)
-                menu_scene_counter = 0
-            
-            menu_scene_alien_counter += dt
-            if menu_scene_alien_counter >= menu_scene_alien_change:
-                menu_scene_alien_index += 1
-                menu_scene_alien_index %= len(menu_scene_alien_bg_list)
-                menu_scene_alien_counter = 0
-            
-            cursor_animation_counter += dt
-            if cursor_animation_counter > cursor_animation_change:
-                cursor_animation_index += 1
-                cursor_animation_index %= len(cursor_images)
-                cursor_animation_counter = 0
+            menu_scene_counter.add_counter(dt)
+            if menu_scene_counter.is_change():
+                menu_scene_counter.add_index()
+                menu_scene_counter.reset_counter()
+
+            menu_scene_alien_counter.add_counter(dt)
+            if menu_scene_alien_counter.is_change():
+                menu_scene_alien_counter.add_index()
+                menu_scene_alien_counter.reset_counter()
+                        
+            cursor_animation_counter.add_counter(dt)
+            if cursor_animation_counter.is_change():
+                cursor_animation_counter.add_index()
+                cursor_animation_counter.reset_counter()
             
             keys = pygame.key.get_pressed()
             
-            cursor_move_counter += dt
-            
-            if (keys[pygame.K_s] or keys[pygame.K_DOWN]) and cursor_move_counter >= cursor_move_interval:
-                cursor_move_counter = 0
-                cursor_row += 1
-                cursor_row %= cursor_max_row
-                selected_rect = selection_rect_list[cursor_row]
+            cursor_move_counter.add_counter(dt)
+            if (keys[pygame.K_s] or keys[pygame.K_DOWN]) and cursor_move_counter.is_active():
+                cursor_move_counter.add_index()
+                cursor_move_counter.reset_counter()
                 sound_map["select"].play()
             
-            if (keys[pygame.K_w] or keys[pygame.K_UP]) and cursor_move_counter >= cursor_move_interval:
-                cursor_move_counter = 0
-                cursor_row -= 1
-                cursor_row %= cursor_max_row
-                selected_rect = selection_rect_list[cursor_row]
+            if (keys[pygame.K_w] or keys[pygame.K_UP]) and cursor_move_counter.is_active():
+                cursor_move_counter.sub_index()
+                cursor_move_counter.reset_counter()
                 sound_map["select"].play()
 
-            if keys[pygame.K_SPACE] and cursor_move_counter >= cursor_move_interval:
-                cursor_move_counter = 0
+            if keys[pygame.K_SPACE] and cursor_move_counter.is_active():
+                cursor_move_counter.reset_counter()
                 sound_map["select"].play()
-                if cursor_row == 0:
+                if cursor_move_counter.index == 0:
                     current_scene = GAME_SCENE
-                elif cursor_row == 1:
+                elif cursor_move_counter.index == 1:
                     # TODO: MOVE TO OPTION MENU
                     pass
-                elif cursor_row == 2:
+                elif cursor_move_counter.index == 2:
                     running = False
                 
         elif current_scene == GAME_SCENE:
@@ -239,49 +278,18 @@ def main():
             elif keys[pygame.K_d]:
                 player_ship.direction.x = 1
             
+            missile_factory_cursor.add_counter(dt)
+            if keys[pygame.K_LEFT] and missile_factory_cursor.is_active():
+                missile_factory_cursor.sub_index()
+                missile_factory_cursor.reset_counter()
+            if keys[pygame.K_RIGHT] and missile_factory_cursor.is_active():
+                missile_factory_cursor.add_index()
+                missile_factory_cursor.reset_counter()
+            
             if keys[pygame.K_SPACE] and player_ship.can_shoot():
-                missile = Missile(player_missile_1, (player_ship.rect.centerx, player_ship.rect.centery - 5), "player")
-                missile_container.append(missile)
+                missile_factory_list[missile_factory_cursor.index].shoot(missile_container)
                 player_ship.missile_cooldown = 0.5
                 sound_map["shoot"].play()
-            
-            if keys[pygame.K_z] and player_ship.can_shoot():
-                # 一番近い敵を求める
-                distance: float | None = None
-                target = None
-                for enemy in enemy_container:
-                    d = (enemy.rect.x - player_ship.rect.x) ** 2 + (enemy.rect.y - player_ship.rect.y) ** 2
-                    if distance is None:
-                        distance = d
-                        target = enemy
-                        continue
-                    if d < distance:
-                        distance = d
-                        target = enemy
-                
-                if target is None:
-                    missile = Missile(
-                        player_missile_1,
-                        (player_ship.rect.centerx, player_ship.rect.centery - 5),
-                        "player")
-                else:
-                    missile = HomingMissile(
-                        player_missile_2,
-                        (player_ship.rect.centerx, player_ship.rect.centery - 5),
-                        "player", 
-                        target)
-                missile_container.append(missile)
-                player_ship.missile_cooldown = 0.5
-                sound_map["shoot"].play()
-            
-            if keys[pygame.K_x] and player_ship.can_shoot():
-                for i in range(5):
-                    m = DiagonalMissile(
-                        player_missile_1, (player_ship.rect.centerx, player_ship.rect.centery - 5), "player", i * 30 + -150
-                    )
-                    missile_container.append(m)
-                sound_map["shoot"].play()
-                player_ship.missile_cooldown = 0.5
             
             for enemy in enemy_container:
                 enemy.update(dt)
@@ -308,6 +316,15 @@ def main():
 
             if player_life <= 0:
                 current_scene = MOVE_TO_GAME_OVER_SCENE
+            
+            current_missile_text_surface = font.render(missile_factory_list[missile_factory_cursor.index].name, False, WHITE)
+            current_missile_text_rect = current_missile_text_surface.get_rect()
+            
+            current_missile_text_rect.left = screen_rect.left + 30
+            current_missile_text_rect.bottom = screen_rect.bottom - 30
+            
+            screen.blit(current_missile_text_surface, current_missile_text_rect)
+            
             
             player_ship.update(dt)
             player_ship.draw(screen)
@@ -366,14 +383,13 @@ def main():
             screen.blit(game_over_text, game_over_text_rect)
             screen.blit(place_space_to_continue_text, place_space_to_continue_text_rect)
             screen.blit(space_text_image, space_text_rect)
-            screen.blit(cursor_images[cursor_animation_index], cursor_image_rect)
-            screen.blit(reversed_cursor_images[cursor_animation_index], reversed_cursor_image_rect)
+            screen.blit(cursor_images[cursor_animation_counter.index], cursor_image_rect)
+            screen.blit(reversed_cursor_images[cursor_animation_counter.index], reversed_cursor_image_rect)
             
-            cursor_animation_counter += dt
-            if cursor_animation_counter >= cursor_animation_change:
-                cursor_animation_index += 1
-                cursor_animation_index %= len(cursor_images)
-                cursor_animation_counter = 0
+            cursor_animation_counter.add_counter(dt)
+            if cursor_animation_counter.is_change():
+                cursor_animation_counter.add_index()
+                cursor_animation_counter.reset_counter()
             
             if pygame.key.get_pressed()[pygame.K_SPACE]:
                 sound_map["select"].play()
