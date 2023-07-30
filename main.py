@@ -29,6 +29,14 @@ def main():
     
     font = pygame.Font("assets/fonts/PixelMplus12-Regular.ttf", size=36)
     
+    sound_map = {
+        "shoot": pygame.mixer.Sound("assets/sound/bullet_shoot.wav"),
+        "hit": pygame.mixer.Sound("assets/sound/hit.wav"),
+        "select": pygame.mixer.Sound("assets/sound/select.wav")
+    }
+    sound_map["select"].set_volume(0.4)
+    
+    
     background = AnimatedBackground("assets/image/background/background_1_{INDEX}.png", screen.get_size())
     star_background = MovedBackground("assets/image/background/background_2.png", screen.get_size())
     fixed_background = FixedBackground("assets/image/background/background_3.png", screen.get_size())
@@ -171,15 +179,18 @@ def main():
                 cursor_row += 1
                 cursor_row %= cursor_max_row
                 selected_rect = selection_rect_list[cursor_row]
+                sound_map["select"].play()
             
             if (keys[pygame.K_w] or keys[pygame.K_UP]) and cursor_move_counter >= cursor_move_interval:
                 cursor_move_counter = 0
                 cursor_row -= 1
                 cursor_row %= cursor_max_row
                 selected_rect = selection_rect_list[cursor_row]
+                sound_map["select"].play()
 
             if keys[pygame.K_SPACE] and cursor_move_counter >= cursor_move_interval:
                 cursor_move_counter = 0
+                sound_map["select"].play()
                 if cursor_row == 0:
                     current_scene = GAME_SCENE
                 elif cursor_row == 1:
@@ -229,6 +240,7 @@ def main():
                 missile = Missile(player_missile_1, (player_ship.rect.centerx, player_ship.rect.centery - 5), "player")
                 missile_container.append(missile)
                 player_ship.missile_cooldown = 0.5
+                sound_map["shoot"].play()
             
             if keys[pygame.K_z] and player_ship.can_shoot():
                 # 一番近い敵を求める
@@ -257,6 +269,7 @@ def main():
                         target)
                 missile_container.append(missile)
                 player_ship.missile_cooldown = 0.5
+                sound_map["shoot"].play()
             
             if keys[pygame.K_x] and player_ship.can_shoot():
                 for i in range(5):
@@ -264,6 +277,7 @@ def main():
                         player_missile_1, (player_ship.rect.centerx, player_ship.rect.centery - 5), "player", i * 30 + -150
                     )
                     missile_container.append(m)
+                sound_map["shoot"].play()
                 player_ship.missile_cooldown = 0.5
             
             for enemy in enemy_container:
@@ -359,6 +373,7 @@ def main():
                 cursor_animation_counter = 0
             
             if pygame.key.get_pressed()[pygame.K_SPACE]:
+                sound_map["select"].play()
                 current_scene = MENU_SCENE
         
         pygame.display.update()

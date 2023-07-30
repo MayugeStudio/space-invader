@@ -55,7 +55,6 @@ class DiagonalMissile(Missile):
         self.direction.y = math.sin(self.angle)
         self.direction = self.direction.normalize()
         self.image = pygame.transform.rotate(self.image, -angle + 90)
-        print(angle + 90)
     
     def update(self, dt: float) -> None:
         self.rect.x += self.direction.x * self.speed * dt
