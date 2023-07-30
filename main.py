@@ -11,6 +11,31 @@ from background import AnimatedBackground, MovedBackground, FixedBackground
 from utils import load_image, scale_image_by_size
 
 
+class Cursor:
+    def __init__(self, interval: float, max_index: int, initial_index: int = 0) -> None:
+        self.counter = 0
+        self.interval = interval
+        self.index = initial_index
+        self.max_index = max_index
+    
+    def add_counter(self, dt: float) -> None:
+        self.counter += dt
+    
+    def add_index(self) -> None:
+        self.index += 1
+        self.index %= self.max_index
+    
+    def sub_index(self) -> None:
+        self.index -= 1
+        self.index %= self.max_index
+
+    def is_active(self) -> bool:
+        return self.interval >= self.counter
+
+    def reset_counter(self) -> None:
+        self.counter = 0
+
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode(SCREEN_SIZE)
@@ -34,7 +59,8 @@ def main():
         "hit": pygame.mixer.Sound("assets/sound/hit.wav"),
         "select": pygame.mixer.Sound("assets/sound/select.wav")
     }
-    sound_map["select"].set_volume(0.4)
+    sound_map["shoot"].set_volume(0.1)
+    sound_map["select"].set_volume(0.1)
     
     
     background = AnimatedBackground("assets/image/background/background_1_{INDEX}.png", screen.get_size())
@@ -56,9 +82,13 @@ def main():
     missile_container: list[Missile] = []
     enemy_container: list[Enemy] = []
     
-    normal_missile_factory = MissileFactory(player_missile_1, player_ship)
-    homing_missile_factory = HomingMissileFactory(player_missile_2, player_ship, enemy_container)
-    five_way_missile_factory = WayMissileFactory(player_missile_1, player_ship, 5)
+    normal_missile_factory = MissileFactory(player_missile_1, player_ship, "普通のミサイル")
+    homing_missile_factory = HomingMissileFactory(player_missile_2, player_ship, enemy_container, "ホーミング")
+    five_way_missile_factory = WayMissileFactory(player_missile_1, player_ship, 5, "5wayミサイル")
+    
+    missile_factory_list = [normal_missile_factory, homing_missile_factory, five_way_missile_factory]
+    missile_factory_cursor = Cursor(0.2, len(missile_factory_list))
+    current_factory = 0
     
     MENU_SCENE = "MENU"
     GAME_SCENE = "GAME"
@@ -243,20 +273,18 @@ def main():
             elif keys[pygame.K_d]:
                 player_ship.direction.x = 1
             
+            missile_factory_cursor.add_counter(dt)
+            if keys[pygame.K_LEFT] and missile_factory_cursor.is_active():
+                missile_factory_cursor.add_index()
+                missile_factory_cursor.reset_counter()
+            if keys[pygame.K_RIGHT] and missile_factory_cursor.is_active():
+                missile_factory_cursor.sub_index()
+                missile_factory_cursor.reset_counter()
+            
             if keys[pygame.K_SPACE] and player_ship.can_shoot():
-                normal_missile_factory.shoot(missile_container)
+                missile_factory_list[current_factory].shoot(missile_container)
                 player_ship.missile_cooldown = 0.5
                 sound_map["shoot"].play()
-            
-            if keys[pygame.K_z] and player_ship.can_shoot():
-                homing_missile_factory.shoot(missile_container)
-                player_ship.missile_cooldown = 0.5
-                sound_map["shoot"].play()
-            
-            if keys[pygame.K_x] and player_ship.can_shoot():
-                five_way_missile_factory.shoot(missile_container)
-                sound_map["shoot"].play()
-                player_ship.missile_cooldown = 0.5
             
             for enemy in enemy_container:
                 enemy.update(dt)
@@ -283,6 +311,15 @@ def main():
 
             if player_life <= 0:
                 current_scene = MOVE_TO_GAME_OVER_SCENE
+            
+            current_missile_text_surface = font.render(missile_factory_list[current_factory].name, False, WHITE)
+            current_missile_text_rect = current_missile_text_surface.get_rect()
+            
+            current_missile_text_rect.left = screen_rect.left + 30
+            current_missile_text_rect.bottom = screen_rect.bottom - 30
+            
+            screen.blit(current_missile_text_surface, current_missile_text_rect)
+            
             
             player_ship.update(dt)
             player_ship.draw(screen)

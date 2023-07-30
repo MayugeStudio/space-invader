@@ -62,9 +62,10 @@ class DiagonalMissile(Missile):
 
 
 class MissileFactory:
-    def __init__(self, prototype: MissilePrototype, player: Entity) -> None:
+    def __init__(self, prototype: MissilePrototype, player: Entity, name: str) -> None:
         self.prototype = prototype
         self.player = player
+        self.name = name
     
     def shoot(self, missile_container: list[Missile]) -> None:
         missile = Missile(self.prototype, (self.player.rect.centerx, self.player.rect.centery - 5), "player")
@@ -72,8 +73,8 @@ class MissileFactory:
 
 
 class HomingMissileFactory(MissileFactory):
-    def __init__(self, prototype: MissilePrototype, player: Entity, enemy_container: list[Enemy]) -> None:
-        super().__init__(prototype, player)
+    def __init__(self, prototype: MissilePrototype, player: Entity, enemy_container: list[Enemy], name: str) -> None:
+        super().__init__(prototype, player, name)
         self.enemy_container = enemy_container
     
     def shoot(self, missile_container: list[Missile]) -> None:
@@ -105,8 +106,8 @@ class HomingMissileFactory(MissileFactory):
 
 
 class WayMissileFactory(MissileFactory):
-    def __init__(self, prototype: MissilePrototype, player: Entity, num: int) -> None:
-        super().__init__(prototype, player)
+    def __init__(self, prototype: MissilePrototype, player: Entity, num: int, name: str) -> None:
+        super().__init__(prototype, player, name)
         if num % 2 == 0:
             raise ValueError("num は 奇数を指定してください")
         self.num = num
@@ -123,15 +124,6 @@ class WayMissileFactory(MissileFactory):
             )
             missile_container.append(missile)
 
-
-def shoot_5_way_missile(prototype: MissilePrototype, player: Entity) -> list[Missile]:
-    result: list[Missile] = []
-    for i in range(5):
-        missile = DiagonalMissile(
-            prototype, (player.rect.centerx, player.rect.centery - 5), "player", i * 20 + -150
-        )
-        result.append(missile)
-    return result
 
 @dataclass
 class MissilePrototype:
