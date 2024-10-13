@@ -9,7 +9,7 @@ class FixedBackground:
         self.image = scale_image_by_size(self.image, screen_size)
         self.rect = self.image.get_rect()
         self.rect.topleft = (0, 0)
-    
+
     def draw(self, screen: pygame.Surface) -> None:
         screen.blit(self.image, self.rect)
 
@@ -27,7 +27,7 @@ class AnimatedBackground:
 
     def draw(self, screen: pygame.Surface) -> None:
         screen.blit(self.image, self.rect)
-    
+
     def update(self, dt: float) -> None:
         self.frame_counter += dt
         if self.frame_counter >= self.frame_change:
@@ -46,15 +46,14 @@ class MovedBackground:
         self.rect.topleft = (0, 0)
         self.y = 0
         self.screen_height = screen_size[1]
-    
+
     def draw(self, screen: pygame.Surface) -> None:
         screen.blit(self.image, self.rect)
         screen.blit(self.image, (self.rect.left, self.rect.top - self.screen_height))
-    
+
     def update(self, dt: float) -> None:
         self.y += 100 * dt
         self.rect.top = round(self.y)
         if self.rect.top > self.screen_height:
             self.rect.top = 0
             self.y = 0
-        

@@ -14,15 +14,17 @@ from utils import load_image
 
 class Missile(Entity):
     def __init__(
-            self,
-            prototype: MissilePrototype,
-            position: tuple[float, float],
-            team: str,
+        self,
+        prototype: MissilePrototype,
+        position: tuple[float, float],
+        team: str,
     ) -> None:
         position = int(position[0]), int(position[1])
         super().__init__("", prototype.image_size, position, image=prototype.image)
         self.team = team
-        self.direction = pygame.Vector2(0, -1) if team == "player" else pygame.Vector2(0, 1)
+        self.direction = (
+            pygame.Vector2(0, -1) if team == "player" else pygame.Vector2(0, 1)
+        )
         self.speed = prototype.speed
 
     def update(self, dt: float) -> None:
@@ -30,7 +32,13 @@ class Missile(Entity):
 
 
 class HomingMissile(Missile):
-    def __init__(self, prototype: MissilePrototype, position: tuple[float, float], team: str, target: Enemy) -> None:
+    def __init__(
+        self,
+        prototype: MissilePrototype,
+        position: tuple[float, float],
+        team: str,
+        target: Enemy,
+    ) -> None:
         super().__init__(prototype, position, team)
         self.target = target
 
@@ -48,7 +56,13 @@ class HomingMissile(Missile):
 
 
 class DiagonalMissile(Missile):
-    def __init__(self, prototype: MissilePrototype, position: tuple[float, float], team: str, angle: int) -> None:
+    def __init__(
+        self,
+        prototype: MissilePrototype,
+        position: tuple[float, float],
+        team: str,
+        angle: int,
+    ) -> None:
         super().__init__(prototype, position, team)
         self.angle = math.radians(angle)
         self.direction.x = math.cos(self.angle)
@@ -68,12 +82,22 @@ class MissileFactory:
         self.name = name
 
     def shoot(self, missile_container: list[Missile]) -> None:
-        missile = Missile(self.prototype, (self.player.rect.centerx, self.player.rect.centery - 5), "player")
+        missile = Missile(
+            self.prototype,
+            (self.player.rect.centerx, self.player.rect.centery - 5),
+            "player",
+        )
         missile_container.append(missile)
 
 
 class HomingMissileFactory(MissileFactory):
-    def __init__(self, prototype: MissilePrototype, player: Entity, enemy_container: list[Enemy], name: str) -> None:
+    def __init__(
+        self,
+        prototype: MissilePrototype,
+        player: Entity,
+        enemy_container: list[Enemy],
+        name: str,
+    ) -> None:
         super().__init__(prototype, player, name)
         self.enemy_container = enemy_container
 
@@ -81,7 +105,9 @@ class HomingMissileFactory(MissileFactory):
         distance: float | None = None
         target = None
         for enemy in self.enemy_container:
-            d = (enemy.rect.x - self.player.rect.x) ** 2 + (enemy.rect.y - self.player.rect.y) ** 2
+            d = (enemy.rect.x - self.player.rect.x) ** 2 + (
+                enemy.rect.y - self.player.rect.y
+            ) ** 2
             if distance is None:
                 distance = d
                 target = enemy
@@ -94,19 +120,23 @@ class HomingMissileFactory(MissileFactory):
             missile = Missile(
                 self.prototype,
                 (self.player.rect.centerx, self.player.rect.centery - 5),
-                "player")
+                "player",
+            )
         else:
             missile = HomingMissile(
                 self.prototype,
                 (self.player.rect.centerx, self.player.rect.centery - 5),
                 "player",
-                target)
+                target,
+            )
 
         missile_container.append(missile)
 
 
 class WayMissileFactory(MissileFactory):
-    def __init__(self, prototype: MissilePrototype, player: Entity, num: int, name: str) -> None:
+    def __init__(
+        self, prototype: MissilePrototype, player: Entity, num: int, name: str
+    ) -> None:
         super().__init__(prototype, player, name)
         if num % 2 == 0:
             raise ValueError("num は 奇数を指定してください")
@@ -119,8 +149,10 @@ class WayMissileFactory(MissileFactory):
     def shoot(self, missile_container: list[Missile]) -> None:
         for i in range(self.num):
             missile = DiagonalMissile(
-                self.prototype, (self.player.rect.centerx, self.player.rect.centery - 5),
-                "player", i * self.space + self.offset
+                self.prototype,
+                (self.player.rect.centerx, self.player.rect.centery - 5),
+                "player",
+                i * self.space + self.offset,
             )
             missile_container.append(missile)
 
